@@ -104,6 +104,31 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleUpdateTodo = async (id: number, data: Partial<Todo>) => {
+    try {
+      setTodos(prev =>
+        prev.map(todo =>
+          todo.id === id ? { ...todo, isLoading: true } : todo,
+        ),
+      );
+
+      const updatedTodo = await updateTodo(id, data);
+
+      setTodos(prev =>
+        prev.map(todo =>
+          todo.id === id ? { ...updatedTodo, isLoading: false } : todo,
+        ),
+      );
+    } catch {
+      setError('Unable to update a todo');
+      setTodos(prev =>
+        prev.map(todo =>
+          todo.id === id ? { ...todo, isLoading: false } : todo,
+        ),
+      );
+    }
+  };
+
   const handleClearCompleted = async () => {
     const completedTodos = todos.filter(todo => todo.completed);
 
@@ -246,7 +271,12 @@ export const App: React.FC = () => {
 
         {!!todos.length && (
           <>
-            <TodoList todos={filteredTodos} onDelete={handleDeleteTodo} />
+            <TodoList
+              todos={filteredTodos}
+              onDelete={handleDeleteTodo}
+              onUpdate={handleUpdateTodo}
+              onError={setError}
+            />
 
             <Footer
               todos={todos}

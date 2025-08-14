@@ -4,18 +4,20 @@ import { Todo } from '../types/Todo';
 
 type TodoItemProps = {
   todo: Todo;
-  onDelete: (id: number) => void;
+  onDelete: (id: number) => Promise<void>;
   onUpdate: (id: number, data: Partial<Todo>) => Promise<void>;
+  onError: (message: string) => void;
 };
 
 export const TodoItem: React.FC<TodoItemProps> = ({
   todo,
   onDelete,
   onUpdate,
+  onError,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingLocal, setIsLoadingLocal] = useState(false);
   const editInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -26,11 +28,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
   const handleStatusChange = async () => {
     try {
-      setIsLoading(true);
+      setIsLoadingLocal(true);
       await onUpdate(todo.id, { completed: !todo.completed });
     } catch {
+      onError('Unable to update a todo');
     } finally {
-      setIsLoading(false);
+      setIsLoadingLocal(false);
     }
   };
 
@@ -49,20 +52,28 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     }
 
     if (!trimmedTitle) {
-      await onDelete(todo.id);
+      try {
+        setIsLoadingLocal(true);
+        await onDelete(todo.id);
+      } catch {
+        onError('Unable to delete a todo');
+      } finally {
+        setIsLoadingLocal(false);
+      }
 
       return;
     }
 
     try {
-      setIsLoading(true);
+      setIsLoadingLocal(true);
       await onUpdate(todo.id, { title: trimmedTitle });
       setIsEditing(false);
     } catch {
+      onError('Unable to update a todo');
       setEditTitle(todo.title);
       setIsEditing(false);
     } finally {
-      setIsLoading(false);
+      setIsLoadingLocal(false);
     }
   };
 
@@ -74,6 +85,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       setEditTitle(todo.title);
     }
   };
+
+  const isLoading = todo.isLoading || isLoadingLocal;
 
   return (
     <div
@@ -91,9 +104,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           checked={todo.completed}
           onChange={handleStatusChange}
           disabled={isLoading}
-          aria-label={
-            todo.completed ? 'Mark todo as active' : 'Mark todo as completed'
-          }
+          aria-label={todo.completed ? 'Mark as active' : 'Mark as completed'}
         />
       </label>
 
@@ -113,6 +124,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             onBlur={handleEditSubmit}
             onKeyDown={handleKeyDown}
             ref={editInputRef}
+            disabled={isLoading}
           />
         </form>
       ) : (
@@ -130,6 +142,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             className="todo__remove"
             data-cy="TodoDelete"
             onClick={() => onDelete(todo.id)}
+            disabled={isLoading}
+            aria-label="Delete todo"
           >
             ×
           </button>
@@ -138,8 +152,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
       <div
         data-cy="TodoLoader"
-        className={classNames('modal', 'overlay', {
-          'is-active': isLoading || todo.isLoading,
+        className={classNames('modal overlay', {
+          'is-active': isLoading,
         })}
       >
         <div className="modal-background has-background-white-ter" />
