@@ -119,6 +119,8 @@ export const App: React.FC = () => {
           todo.id === id ? { ...updatedTodo, isLoading: false } : todo,
         ),
       );
+
+      return updatedTodo;
     } catch {
       setError('Unable to update a todo');
       setTodos(prev =>
@@ -126,6 +128,7 @@ export const App: React.FC = () => {
           todo.id === id ? { ...todo, isLoading: false } : todo,
         ),
       );
+      throw new Error('Update failed');
     }
   };
 

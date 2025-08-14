@@ -42,7 +42,11 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     setEditTitle(todo.title);
   };
 
-  const handleEditSubmit = async () => {
+  const handleEditSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
     const trimmedTitle = editTitle.trim();
 
     if (trimmedTitle === todo.title) {
@@ -79,6 +83,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       handleEditSubmit();
     } else if (e.key === 'Escape') {
       setIsEditing(false);
@@ -109,12 +114,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       </label>
 
       {isEditing ? (
-        <form
-          onSubmit={e => {
-            e.preventDefault();
-            handleEditSubmit();
-          }}
-        >
+        <form onSubmit={handleEditSubmit}>
           <input
             data-cy="TodoTitleField"
             type="text"
