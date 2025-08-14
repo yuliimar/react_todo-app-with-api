@@ -17,7 +17,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(todo.title);
-  const [isLoadingLocal, setIsLoadingLocal] = useState(false);
   const editInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -26,27 +25,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     }
   }, [isEditing]);
 
-  const handleStatusChange = async () => {
-    try {
-      setIsLoadingLocal(true);
-      await onUpdate(todo.id, { completed: !todo.completed });
-    } catch {
-      onError('Unable to update a todo');
-    } finally {
-      setIsLoadingLocal(false);
-    }
-  };
-
-  const handleDoubleClick = () => {
-    setIsEditing(true);
+  const cancelEditing = () => {
+    setIsEditing(false);
     setEditTitle(todo.title);
   };
 
-  const handleEditSubmit = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
-    }
-
+  const submitChanges = async () => {
     const trimmedTitle = editTitle.trim();
 
     if (trimmedTitle === todo.title) {
@@ -57,41 +41,50 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
     if (!trimmedTitle) {
       try {
-        setIsLoadingLocal(true);
         await onDelete(todo.id);
       } catch {
         onError('Unable to delete a todo');
-      } finally {
-        setIsLoadingLocal(false);
       }
 
       return;
     }
 
     try {
-      setIsLoadingLocal(true);
       await onUpdate(todo.id, { title: trimmedTitle });
       setIsEditing(false);
     } catch {
       onError('Unable to update a todo');
-      setEditTitle(todo.title);
-      setIsEditing(false);
-    } finally {
-      setIsLoadingLocal(false);
     }
+  };
+
+  const handleStatusChange = async () => {
+    try {
+      await onUpdate(todo.id, { completed: !todo.completed });
+    } catch {
+      onError('Unable to update a todo');
+    }
+  };
+
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+    setEditTitle(todo.title);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitChanges();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleEditSubmit();
+      submitChanges();
     } else if (e.key === 'Escape') {
-      setIsEditing(false);
-      setEditTitle(todo.title);
+      cancelEditing();
     }
   };
 
-  const isLoading = todo.isLoading || isLoadingLocal;
+  const isLoading = todo.isLoading;
 
   return (
     <div
@@ -114,14 +107,14 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       </label>
 
       {isEditing ? (
-        <form onSubmit={handleEditSubmit}>
+        <form onSubmit={handleSubmit}>
           <input
             data-cy="TodoTitleField"
             type="text"
             className="todo__title-field"
             value={editTitle}
             onChange={e => setEditTitle(e.target.value)}
-            onBlur={handleEditSubmit}
+            onBlur={submitChanges}
             onKeyDown={handleKeyDown}
             ref={editInputRef}
             disabled={isLoading}
