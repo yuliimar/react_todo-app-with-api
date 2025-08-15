@@ -9,9 +9,9 @@ import {
 import { Todo } from './types/Todo';
 
 import { Header } from './components/Header';
+import { TodoList } from './components/TodoList';
 import { Footer } from './components/Footer';
 import { ErrorNotification } from './components/ErrorNotification';
-import { TodoItem } from './components/TodoItem';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -182,10 +182,6 @@ export const App: React.FC = () => {
       return;
     }
 
-    if (todos.length === 0) {
-      return;
-    }
-
     try {
       setTodos(prev =>
         prev.map(todo =>
@@ -271,32 +267,13 @@ export const App: React.FC = () => {
           inputRef={inputRef}
         />
 
-        <section className="todoapp__main">
-          {filteredTodos.map(todo => (
-            <TodoItem
-              key={todo.id}
-              todo={todo}
-              onDelete={handleDeleteTodo}
-              onUpdate={handleUpdateTodo}
-              onError={setError}
-            />
-          ))}
-
-          {tempTodo && (
-            <div
-              data-cy="TodoItem"
-              className="todo"
-              style={{ position: 'relative' }}
-            >
-              <TodoItem
-                todo={tempTodo}
-                onDelete={() => {}}
-                onUpdate={() => Promise.resolve()}
-                onError={setError}
-              />
-            </div>
-          )}
-        </section>
+        <TodoList
+          todos={filteredTodos}
+          tempTodo={tempTodo}
+          onDelete={handleDeleteTodo}
+          onUpdate={handleUpdateTodo}
+          onError={setError}
+        />
 
         {!!todos.length && (
           <Footer

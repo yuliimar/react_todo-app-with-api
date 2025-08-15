@@ -13,18 +13,27 @@ export const TodoList: React.FC<Props> = ({
   onDelete,
   onUpdate,
   onError,
-}) => {
-  return (
-    <>
-      {todos.map(todo => (
-        <TodoItem
-          key={todo.id}
-          todo={todo}
-          onDelete={onDelete}
-          onUpdate={onUpdate}
-          onError={onError}
-        />
-      ))}
-    </>
-  );
-};
+  tempTodo,
+}) => (
+  <>
+    {todos.map(todo => (
+      <TodoItem
+        key={todo.id}
+        todo={todo}
+        onDelete={onDelete}
+        onUpdate={onUpdate}
+        onError={onError}
+      />
+    ))}
+
+    {tempTodo && (
+      <TodoItem
+        key="temp"
+        todo={tempTodo}
+        onDelete={() => {}}
+        onUpdate={() => Promise.resolve()}
+        onError={onError}
+      />
+    )}
+  </>
+);
