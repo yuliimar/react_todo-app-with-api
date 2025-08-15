@@ -9,7 +9,6 @@ import {
 import { Todo } from './types/Todo';
 
 import { Header } from './components/Header';
-import { TodoList } from './components/TodoList';
 import { Footer } from './components/Footer';
 import { ErrorNotification } from './components/ErrorNotification';
 import { TodoItem } from './components/TodoItem';
@@ -272,34 +271,46 @@ export const App: React.FC = () => {
           inputRef={inputRef}
         />
 
-        {!!todos.length && (
-          <>
-            <TodoList
-              todos={filteredTodos}
+        <section className="todoapp__main">
+          {filteredTodos.map(todo => (
+            <TodoItem
+              key={todo.id}
+              todo={todo}
               onDelete={handleDeleteTodo}
               onUpdate={handleUpdateTodo}
               onError={setError}
             />
+          ))}
 
-            <Footer
-              todos={todos}
-              setFilter={setFilter}
-              filter={filter}
-              incompleteCount={incompleteCount}
-              onClearCompleted={handleClearCompleted}
-              hasCompleted={hasCompleted}
-              onToggleAll={handleToggleAll}
-              allCompleted={allCompleted}
-            />
-          </>
+          {tempTodo && (
+            <div
+              data-cy="TodoItem"
+              className="todo"
+              style={{ position: 'relative' }}
+            >
+              <TodoItem
+                todo={tempTodo}
+                onDelete={() => {}}
+                onUpdate={() => Promise.resolve()}
+                onError={setError}
+              />
+            </div>
+          )}
+        </section>
+
+        {!!todos.length && (
+          <Footer
+            todos={todos}
+            setFilter={setFilter}
+            filter={filter}
+            incompleteCount={incompleteCount}
+            onClearCompleted={handleClearCompleted}
+            hasCompleted={hasCompleted}
+            onToggleAll={handleToggleAll}
+            allCompleted={allCompleted}
+          />
         )}
       </div>
-
-      {tempTodo && (
-        <div data-cy="TodoItem" style={{ position: 'relative' }}>
-          <TodoItem todo={tempTodo} onDelete={() => {}} />
-        </div>
-      )}
 
       <ErrorNotification message={error} onClose={() => setError('')} />
     </div>
